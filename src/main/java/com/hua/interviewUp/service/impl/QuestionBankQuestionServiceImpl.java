@@ -9,16 +9,21 @@ import com.hua.interviewUp.constant.CommonConstant;
 import com.hua.interviewUp.exception.ThrowUtils;
 import com.hua.interviewUp.mapper.QuestionBankQuestionMapper;
 import com.hua.interviewUp.model.dto.questionBankQuestion.QuestionBankQuestionQueryRequest;
+import com.hua.interviewUp.model.entity.Question;
+import com.hua.interviewUp.model.entity.QuestionBank;
 import com.hua.interviewUp.model.entity.QuestionBankQuestion;
 import com.hua.interviewUp.model.entity.User;
 import com.hua.interviewUp.model.vo.QuestionBankQuestionVO;
 import com.hua.interviewUp.model.vo.UserVO;
 import com.hua.interviewUp.service.QuestionBankQuestionService;
+import com.hua.interviewUp.service.QuestionBankService;
+import com.hua.interviewUp.service.QuestionService;
 import com.hua.interviewUp.service.UserService;
 import com.hua.interviewUp.utils.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -40,6 +45,13 @@ import java.util.stream.Collectors;
 public class QuestionBankQuestionServiceImpl extends ServiceImpl<QuestionBankQuestionMapper, QuestionBankQuestion> implements QuestionBankQuestionService {
 
     @Resource
+    @Lazy
+    private QuestionService questionService;
+
+    @Resource
+    private QuestionBankService questionBankService;
+
+    @Resource
     private UserService userService;
 
     /**
@@ -51,12 +63,19 @@ public class QuestionBankQuestionServiceImpl extends ServiceImpl<QuestionBankQue
     @Override
     public void validQuestionBankQuestion(QuestionBankQuestion questionBankQuestion, boolean add) {
         ThrowUtils.throwIf(questionBankQuestion == null, ErrorCode.PARAMS_ERROR);
-        // todo 从对象中取值
-        // 创建数据时，参数不能为空
-        // todo 补充校验规则
-        // 修改数据时，有参数则校验
-        // todo 补充校验规则
+        // 题目和题库必须存在
+        Long questionId = questionBankQuestion.getQuestionId();
+        if (questionId != null) {
+            Question question = questionService.getById(questionId);
+            ThrowUtils.throwIf(question == null, ErrorCode.NOT_FOUND_ERROR, "题目不存在");
+        }
+        Long questionBankId = questionBankQuestion.getQuestionBankId();
+        if (questionBankId != null) {
+            QuestionBank questionBank = questionBankService.getById(questionBankId);
+            ThrowUtils.throwIf(questionBank == null, ErrorCode.NOT_FOUND_ERROR, "题库不存在");
+        }
     }
+
 
     /**
      * 获取查询条件
